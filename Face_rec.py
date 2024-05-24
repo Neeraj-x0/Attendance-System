@@ -1,10 +1,9 @@
 import face_recognition
 from tkinter import messagebox
-from tkinter import Button
 import cv2
 import os
-import json
 from datetime import datetime
+from database import save_face_data
 
 video_capture = 0
 
@@ -14,7 +13,7 @@ class FaceScan:
         self.master.title("Face Scanner")
         ScanFace()
         self.master.destroy()
-          
+idname = {}         
 # Load images from the "images" folder and generate face encodings
 def load_known_faces(image_folder):
     known_face_encodings = []
@@ -30,39 +29,17 @@ def load_known_faces(image_folder):
             if face_encodings:
                 known_face_encodings.append(face_encodings[0])
                 known_face_names.append(name.split("_")[0])
+                idname[name.split("_")[0]] = name.split("_")[1]
 
     return known_face_encodings, known_face_names
 
 
 # Function to save detected face data to a JSON file
-def save_face_data(face_data):
-    timestamp = datetime.now().strftime("%Y-%m-%d")
-    filename = "face_data.json"
-
-    if os.path.exists(filename):
-        with open(filename, "r+") as f:
-            data = json.load(f)
-            # Update data only if the name is not already present for the current date
-            if timestamp not in data or face_data["name"] not in data[timestamp]:
-                if timestamp not in data:
-                    data[timestamp] = {}
-                data[timestamp][face_data["name"]] = face_data["time"]
-                f.seek(0)  # Move the file pointer to the beginning of the file
-                json.dump(data, f)
-                f.truncate()  # Truncate the file to remove any remaining content
-                print(f"Face data saved to {filename}")
-                messagebox.showinfo("Face Detected", f"Attendance Marked For {face_data["name"]}")
-    else:
-        with open(filename, "w") as f:
-            data = {timestamp: {face_data["name"]: face_data["time"]}}
-            json.dump(data, f)
-            print(f"Face data saved to {filename}")
-            messagebox.showinfo("Face Detected", f"Attendance Marked For {face_data["name"]}")
 
 
 # Function to scan for faces using webcam
 def ScanFace():
-    video_capture = cv2.VideoCapture(1)
+    video_capture = cv2.VideoCapture(0)
     # Initialize video capture from webcam
     
 
@@ -97,10 +74,10 @@ def ScanFace():
 
                     # Save detected face data to a JSON file
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    face_data = {"name": name, "time": timestamp}
-                    save_face_data(face_data)
-                    
-
+                    face_data = {"name": name, "time": timestamp,"student_id":idname[name]}
+                    isaved = save_face_data(face_data)
+                    if isaved:
+                        messagebox.showinfo("Face Recognition", f"Attendance marked for {name}")   
                 face_names.append(name)
 
         process_this_frame = not process_this_frame
@@ -124,7 +101,7 @@ def ScanFace():
         cv2.imshow('Video', frame)
 
         # Hit 'q' on the keyboard to quit!
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q') or ord('Q'):
             break
 
     # Release handle to the webcam

@@ -2,8 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from Register import Register
 from Face_rec import FaceScan
-from tkinter import messagebox
-import json
+from database import get_attendance_data
 
 class Attendance(Frame):
     def __init__(self, master):
@@ -41,17 +40,12 @@ class Attendance(Frame):
         self.app = Register(self.newWindow)
 
     def scan_faces(self):
-       self.newWindow = Toplevel(self.master)
-       self.app = FaceScan(self.newWindow)  # Assuming ScanFace function directly opens a window for face scanning
+        self.newWindow = Toplevel(self.master)
+        self.app = FaceScan(self.newWindow)  # Assuming ScanFace function directly opens a window for face scanning
 
     def show_attendance(self):
-        # Read attendance data from JSON file
-        try:
-            with open("face_data.json", "r") as file:
-                attendance_data = json.load(file)
-        except FileNotFoundError:
-            messagebox.showerror("Error", "Attendance data file not found!")
-            return
+        # Fetch attendance data from the database
+        attendance_data = get_attendance_data()
 
         # Create a new window to display attendance
         self.attendance_window = Toplevel(self.master)
@@ -62,11 +56,9 @@ class Attendance(Frame):
         self.text_widget.pack(expand=True, fill=BOTH, padx=10, pady=10)
 
         # Insert attendance data into the text widget
-        for date, details in attendance_data.items():
-            self.text_widget.insert(END, f"Date: {date}\n")
-            for name, time in details.items():
-                self.text_widget.insert(END, f"{name}: {time}\n")
-            self.text_widget.insert(END, "\n")
+        for record in attendance_data:
+            name, student_id, timestamp = record
+            self.text_widget.insert(END, f"Name: {name}\nStudent ID: {student_id}\nTime: {timestamp}\n\n")
 
 def main():
     root = Tk()

@@ -3,10 +3,7 @@ import os
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog  # Importing simpledialog submodule
-
 from PIL import Image, ImageTk
-
-
 class Register:
     def __init__(self, master):
         self.master = master
@@ -23,7 +20,7 @@ class Register:
         self.capture_button.pack(pady=10)
 
         # Initialize video capture from webcam
-        self.video_capture = cv2.VideoCapture(1)
+        self.video_capture = cv2.VideoCapture(0)
 
         # Start the update loop
         self.update_preview()
